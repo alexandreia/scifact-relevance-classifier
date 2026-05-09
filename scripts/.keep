@@ -1,0 +1,4 @@
+HF Hub publish helpers will live here:
+  - push_dataset.py    publishes data_scifact/ as a HF dataset
+  - push_model.py      publishes artefacts_scifact/{classifier.pkl, metadata.json} as a HF model
+  - prepare_space.py   stages the Gradio app + README into a HF Space repo

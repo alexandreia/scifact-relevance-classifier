@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Environment / secrets
+.env
+.env.local
+*.pem
+*.key
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# Project-specific: large artefacts that live on HF Hub instead of git
+artefacts_scifact/embedding_model/
+artefacts_scifact/classifier.pkl
+
+# Project-specific: regeneratable CSVs (run scifact_dataset.py to rebuild)
+data_scifact/*.csv
+
+# Project-specific: previous abandoned attempt
+archive_romanian/
+
+# Local logs
+*.log
+training_run.log
+
+# HF Hub cache (if it ever lands inside the repo)
+.cache/
