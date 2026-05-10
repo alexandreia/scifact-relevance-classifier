@@ -41,14 +41,6 @@ The project uses the embedding model:
 intfloat/e5-small-v2
 ```
 
-For each claim-document pair, I encode the claim as `q` and the document as `d`, then build this feature vector:
-
-```text
-[q, d, abs(q - d), q * d, cosine(q, d)]
-```
-
-This gives the classifier information about the two texts, their distance, their interaction, and their cosine similarity.
-
 ## Models
 
 Several classifiers are trained and compared:
