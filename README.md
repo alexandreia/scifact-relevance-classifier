@@ -109,6 +109,30 @@ Run the local Gradio relevance demo:
 python app_scifact.py
 ```
 
+## Project Structure
+
+```text
+.
+├── README.md
+├── report/
+│   └── report.md
+├── scifact_dataset.py              # builds the binary relevance dataset
+├── scifact_dataset_stance.py       # builds the 3-class stance dataset
+├── scifact_features.py             # creates embedding pair features
+├── train_scifact_classifier.py     # trains/evaluates binary classifiers
+├── train_stance_classifier.py      # trains/evaluates stance classifiers
+├── app_scifact.py                  # local Gradio demo
+├── scripts/
+│   ├── space_app.py                # Hugging Face Space app
+│   ├── push_dataset.py             # uploads dataset to Hugging Face
+│   ├── push_model.py               # uploads trained model artifacts
+│   └── push_space.py               # uploads the demo Space
+├── artefacts_scifact/              # saved binary results and retrieval files
+├── artefacts_stance/               # saved stance model and results
+├── data_scifact_stance/            # generated stance CSV files
+└── requirements.txt
+```
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).
