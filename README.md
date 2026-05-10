@@ -8,7 +8,6 @@ This project trains classifiers on top of text embeddings to classify scientific
 
 | Resource | Link |
 |---|---|
-| GitHub repository | <https://github.com/alexandreia/scifact-relevance-classifier> |
 | Hugging Face dataset | <https://huggingface.co/datasets/andreiaalexa/scifact-relevance-pairs> |
 | Hugging Face model | <https://huggingface.co/andreiaalexa/scifact-relevance-classifier> |
 | Hugging Face demo Space | <https://huggingface.co/spaces/andreiaalexa/scifact-relevance-classifier> |
