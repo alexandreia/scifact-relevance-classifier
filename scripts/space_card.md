@@ -28,6 +28,16 @@ A live retrieve-and-rerank demo with **stance prediction**: paste a scientific c
 
 The top 10 results are returned ranked by `P(stance) = 1 − P(NEI)`, so the most evidence-bearing papers (whether supporting OR refuting) appear first. A summary above the table aggregates the stance distribution across the full top-50 retrieval window.
 
+## Statistical evidence summary
+
+The demo reports a **directional evidence test** over the confidently classified SUPPORTS and REFUTES documents:
+
+- count of confident SUPPORTS / REFUTES papers
+- SUPPORTS share with a 95% Wilson confidence interval
+- exact binomial p-value testing whether retrieved stance-bearing papers are balanced between SUPPORTS and REFUTES
+
+This p-value answers: *among the retrieved papers that the model confidently classifies as taking a stance, is the direction significantly skewed?* It does **not** extract or replace the statistical significance reported inside the original biomedical papers.
+
 ## Two classifiers ship in this Space's backing model repo
 
 | Task | Classes | Best model | macro-F1 |

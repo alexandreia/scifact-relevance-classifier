@@ -15,6 +15,7 @@ is topically relevant.
 from __future__ import annotations
 
 import json
+import math
 import pickle
 
 import gradio as gr
@@ -87,6 +88,87 @@ COVERAGE_OK = 0.65
 # evidence summary. 0.6 is stricter than the classifier's argmax (which can be
 # below 0.5 in 3-class settings) and avoids counting low-confidence guesses.
 CONFIDENCE_THRESHOLD = 0.6
+MIN_STANCE_DOCS_FOR_TEST = 5
+
+
+def exact_two_sided_binomial_p(successes: int, trials: int) -> float | None:
+    """Exact two-sided binomial test against p=0.5.
+
+    Here a "success" means SUPPORTS and a "failure" means REFUTES. This tests
+    whether the confidently classified stance-bearing documents are balanced
+    between support and refutation. It is not a p-value from the original
+    biomedical studies.
+    """
+    if trials <= 0:
+        return None
+
+    observed = math.comb(trials, successes) * (0.5 ** trials)
+    p_value = 0.0
+    for k in range(trials + 1):
+        prob = math.comb(trials, k) * (0.5 ** trials)
+        if prob <= observed + 1e-15:
+            p_value += prob
+    return min(1.0, p_value)
+
+
+def wilson_interval(successes: int, trials: int, z: float = 1.96) -> tuple[float, float] | None:
+    """Wilson 95% interval for the SUPPORTS share among SUPPORTS+REFUTES docs."""
+    if trials <= 0:
+        return None
+
+    p_hat = successes / trials
+    denom = 1.0 + (z * z) / trials
+    centre = p_hat + (z * z) / (2 * trials)
+    margin = z * math.sqrt((p_hat * (1.0 - p_hat) + (z * z) / (4 * trials)) / trials)
+    return (centre - margin) / denom, (centre + margin) / denom
+
+
+def directional_evidence_summary(s: dict[str, int], max_cos: float, avg_cos: float) -> str:
+    supports = s["SUPPORTS"]
+    refutes = s["REFUTES"]
+    stance_docs = supports + refutes
+
+    if max_cos < COVERAGE_LOW:
+        return (
+            "### Directional evidence test\n\n"
+            "No statistical evidence test is reported because retrieval coverage is too low: "
+            "the corpus does not appear to contain directly relevant papers for this claim.\n\n"
+        )
+
+    if stance_docs < MIN_STANCE_DOCS_FOR_TEST:
+        return (
+            "### Directional evidence test\n\n"
+            f"Only **{stance_docs}** confidently stance-bearing papers were found "
+            f"({supports} SUPPORTS, {refutes} REFUTES). At least "
+            f"{MIN_STANCE_DOCS_FOR_TEST} are required before reporting a p-value.\n\n"
+        )
+
+    p_value = exact_two_sided_binomial_p(supports, stance_docs)
+    interval = wilson_interval(supports, stance_docs)
+    support_share = supports / stance_docs
+    ci_low, ci_high = interval
+
+    if p_value is not None and p_value < 0.05:
+        direction = "supporting" if supports > refutes else "refuting"
+        verdict = f"statistically significant skew toward **{direction}** the claim"
+    else:
+        verdict = "no statistically significant directional skew"
+
+    return (
+        "### Directional evidence test\n\n"
+        "| Measure | Value |\n"
+        "|---|---:|\n"
+        f"| Confident SUPPORTS | {supports} |\n"
+        f"| Confident REFUTES | {refutes} |\n"
+        f"| SUPPORTS share | {support_share:.1%} |\n"
+        f"| 95% Wilson CI | {ci_low:.1%} to {ci_high:.1%} |\n"
+        f"| Exact binomial p-value | {p_value:.4f} |\n\n"
+        f"Interpretation: **{verdict}** among the confidently classified, retrieved "
+        f"stance-bearing documents. Retrieval coverage: avg cosine = {avg_cos:.2f}, "
+        f"max cosine = {max_cos:.2f}.\n\n"
+        "> This is a document-level evidence aggregation test over model-classified "
+        "retrieval results, not a p-value extracted from the original studies.\n\n"
+    )
 
 
 def search(query: str):
@@ -157,6 +239,7 @@ def search(query: str):
         f"- *uncertain* (no class above {CONFIDENCE_THRESHOLD}): **{s['uncertain']}** papers\n\n"
         f"_Retrieval coverage: avg cosine = {avg_cos:.2f}, max cosine = {max_cos:.2f}._\n\n"
     )
+    summary += directional_evidence_summary(s, max_cos, avg_cos)
 
     # 5) Honest trend messaging — driven by STANCE DENSITY, not coverage cosine.
     # Coverage tells you "are these papers semantically near my query?" — high
@@ -210,6 +293,12 @@ def search(query: str):
 
         pred_id = int(pred_ids[local_i])
         pred_label = ID2LABEL[pred_id]
+        pred_confidence = float(proba[local_i, pred_id])
+        contributes = (
+            pred_label in ("SUPPORTS", "REFUTES")
+            and pred_confidence >= CONFIDENCE_THRESHOLD
+            and max_cos >= COVERAGE_LOW
+        )
         rows.append({
             "rank": rank,
             "stance": colored_label(pred_label),
@@ -217,6 +306,7 @@ def search(query: str):
             "P(REFUTES)":  round(float(proba[local_i, 1]), 3),
             "P(NEI)":      round(float(proba[local_i, 0]), 3),
             "retrieval_cos": round(float(cos_scores[corpus_i]), 3),
+            "used_in_test": "yes" if contributes else "no",
             "title (click for source)": f"[{title}]({s2_url})",
             "abstract_excerpt": excerpt,
         })
@@ -256,9 +346,9 @@ with gr.Blocks(title="SciFact Evidence Search") as demo:
     output = gr.Dataframe(
         label="Top results re-ranked by P(stance) — most evidence-bearing first",
         headers=["rank", "stance", "P(SUPPORTS)", "P(REFUTES)", "P(NEI)",
-                 "retrieval_cos", "title (click for source)", "abstract_excerpt"],
+                 "retrieval_cos", "used_in_test", "title (click for source)", "abstract_excerpt"],
         datatype=["number", "markdown", "number", "number", "number",
-                  "number", "markdown", "str"],
+                  "number", "str", "markdown", "str"],
         wrap=True,
         interactive=False,
     )
@@ -276,12 +366,16 @@ with gr.Blocks(title="SciFact Evidence Search") as demo:
 
 **`retrieval_cos`** — cosine similarity between your query embedding and the paper embedding (both via `intfloat/e5-small-v2`). This is what the *retrieval stage* used to pick the top 50 candidates. The classifier then re-ranked them by P(stance).
 
+**`used_in_test`** — whether this paper was counted in the directional evidence test. A paper is counted only when it is confidently classified as SUPPORTS or REFUTES and retrieval coverage is adequate.
+
+**Directional evidence test** — an exact binomial test over confident SUPPORTS vs REFUTES documents. It asks whether the retrieved stance-bearing papers are balanced, or whether they significantly skew toward one direction. This is **not** the same thing as the p-values or effect sizes reported inside the original papers.
+
 **Important caveats:**
 
 1. The model was trained on **biomedical** SciFact data (3,545 (claim, document) pairs, of which only 194 are REFUTES). Predictions on non-biomedical claims may be unreliable.
 2. **REFUTES is the minority class** (7% of training data) — the classifier's REFUTES recall is the weakest. Treat low-confidence REFUTES predictions sceptically; verify by reading the abstract.
 3. The model is small (`HistGradientBoostingClassifier` on top of frozen 384-dim e5-small-v2 embeddings). It cannot understand fine-grained negation or quantitative reversals like a fine-tuned RoBERTa would. Consider it a **first-pass** evidence sorter, not a final verdict.
-4. **`P(SUPPORTS)` and `P(REFUTES)` are NOT confidence in whether the CLAIM is TRUE.** They are confidence in whether *this particular paper* takes that stance. To answer "is the claim true?", read the abstracts of the supporting/refuting papers and weigh the quality of the evidence (sample sizes, study designs, replications).
+4. **`P(SUPPORTS)` and `P(REFUTES)` are NOT confidence in whether the CLAIM is TRUE.** They are confidence in whether *this particular paper* takes that stance. The directional p-value is an aggregate over retrieved documents, not a clinical/statistical conclusion about the real world.
 
 **Citing a result** — click the title to open the paper on Semantic Scholar (authors, journal, year, DOI, BibTeX export).
             """
