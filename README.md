@@ -59,8 +59,6 @@ Several classifiers are trained and compared:
 - HistGradientBoosting
 - MLP neural network
 
-The reason for training several classifiers is to test which type of decision boundary works best on the embedding features. Linear models are useful baselines, while gradient boosting and MLP can learn non-linear interactions between the claim and document embeddings.
-
 ## Results
 
 The best binary relevance model was **HistGradientBoosting** using **title + abstract** as input.
@@ -78,12 +76,6 @@ Main interpretation:
 - `title + abstract` gives the best result because the abstract contains more evidence information.
 - Non-linear models perform better than linear models for binary relevance.
 - The best result is macro-F1 **0.872**.
-
-The demo Space uses the 3-class stance classifier:
-
-- `SUPPORTS`
-- `REFUTES`
-- `NEI` (not enough information)
 
 ## How to Run Locally
 
