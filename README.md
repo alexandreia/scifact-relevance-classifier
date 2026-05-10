@@ -13,12 +13,6 @@ This project trains classifiers on top of text embeddings to classify scientific
 | Hugging Face model | <https://huggingface.co/andreiaalexa/scifact-relevance-classifier> |
 | Hugging Face demo Space | <https://huggingface.co/spaces/andreiaalexa/scifact-relevance-classifier> |
 
-## Project Idea
-
-Scientific evidence search is difficult because two texts can be about the same scientific claim without using the same words. A keyword match is not enough. For example, a paper may discuss vaccination and autism but still conclude that there is no evidence for a causal relationship.
-
-The main challenge is to use semantic embeddings to compare a claim with a scientific title or abstract, then train a classifier that can decide whether the document is useful evidence.
-
 ## Dataset
 
 The custom dataset is built from **SciFact / BEIR SciFact**. The original dataset is a scientific retrieval benchmark. I converted it into classification examples:
@@ -91,8 +85,6 @@ The demo Space uses the 3-class stance classifier:
 - `REFUTES`
 - `NEI` (not enough information)
 
-The stance task is harder than binary relevance. The best stance model is Logistic Regression on title + abstract with macro-F1 **0.533**.
-
 ## How to Run Locally
 
 Create an environment and install dependencies:
@@ -132,24 +124,6 @@ Run the local Gradio relevance demo:
 ```bash
 python app_scifact.py
 ```
-
-## Limitations
-
-- The corpus is biomedical and based on SciFact, so results are less reliable outside this domain.
-- The stance model is weaker than the binary relevance model because support/refutation is a harder task and the classes are imbalanced.
-- The demo is for educational use only and should not be used for medical decision-making.
-- The statistical summary in the demo is based on retrieved documents and model predictions, not on manually extracted statistical results from the papers.
-
-## AI Tool Reflection
-
-AI coding tools were used to help write and debug code, structure the project, and improve the documentation. I still had to check the code, understand the dataset construction, verify the model outputs, and make sure the explanation matched what the system actually does. One important lesson was that AI tools can generate useful code quickly, but they can also make a project look more complete than it really is unless all files, links, and results are checked manually.
-
-## References
-
-- Wadden et al. (2020). *Fact or Fiction: Verifying Scientific Claims*. EMNLP. <https://aclanthology.org/2020.emnlp-main.609/>
-- Thakur et al. (2021). *BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models*. <https://arxiv.org/abs/2104.08663>
-- Wang et al. (2022). *Text Embeddings by Weakly-Supervised Contrastive Pre-training*. <https://arxiv.org/abs/2212.03533>
-- Conneau et al. (2017). *Supervised Learning of Universal Sentence Representations from Natural Language Inference Data*. <https://aclanthology.org/D17-1070/>
 
 ## License
 
