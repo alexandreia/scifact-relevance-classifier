@@ -41,6 +41,15 @@ The project uses the embedding model:
 intfloat/e5-small-v2
 ```
 
+## Method
+
+The pipeline has four steps:
+
+1. Convert SciFact into claim-document classification pairs.
+2. Encode claims and documents with `intfloat/e5-small-v2`.
+3. Build pair features: `[q, d, abs(q - d), q * d, cosine(q, d)]`.
+4. Train and compare several classifiers using train/test splits.
+
 ## Models
 
 Several classifiers are trained and compared:
