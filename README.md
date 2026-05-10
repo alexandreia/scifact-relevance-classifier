@@ -2,9 +2,9 @@
 
 > Embeddings-based binary classifier that decides whether a scientific paper is **relevant evidence** for a scientific claim. Built on BEIR SciFact, `intfloat/e5-small-v2` embeddings, and scikit-learn.
 
-[![Hugging Face Dataset](https://img.shields.io/badge/HF-dataset-yellow)](https://huggingface.co/datasets/USERNAME/scifact-relevance-pairs)
-[![Hugging Face Model](https://img.shields.io/badge/HF-model-yellow)](https://huggingface.co/USERNAME/scifact-relevance-classifier)
-[![Hugging Face Space](https://img.shields.io/badge/HF-space-blue)](https://huggingface.co/spaces/USERNAME/scifact-relevance-classifier)
+[![Hugging Face Dataset](https://img.shields.io/badge/HF-dataset-yellow)](https://huggingface.co/datasets/andreiaalexa/scifact-relevance-pairs)
+[![Hugging Face Model](https://img.shields.io/badge/HF-model-yellow)](https://huggingface.co/andreiaalexa/scifact-relevance-classifier)
+[![Hugging Face Space](https://img.shields.io/badge/HF-space-blue)](https://huggingface.co/spaces/andreiaalexa/scifact-relevance-classifier)
 
 > Course project for **Information Retrieval 5LN712**, Master's in Language Technology, Uppsala University. The badges above will resolve once the Hugging Face artifacts are published.
 
@@ -29,7 +29,7 @@ Best model: `HistGradientBoosting` on the `title + abstract` field variant.
 ## Quick start
 
 ```bash
-git clone https://github.com/USERNAME/scifact-relevance-classifier.git
+git clone https://github.com/alexandreia/scifact-relevance-classifier.git
 cd scifact-relevance-classifier
 
 python -m venv venv

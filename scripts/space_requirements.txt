@@ -1,0 +1,6 @@
+gradio>=5.0,<6.0
+huggingface_hub>=0.25,<1.0
+numpy>=1.24
+scikit-learn>=1.4
+sentence-transformers>=3.0,<4.0
+torch>=2.0
